@@ -151,6 +151,152 @@ def ve_du_lieu_lowpass_filter(cutoff=0.1, order=4):
     except Exception as e:
         logger.error(f"Lỗi khi vẽ: {e}")
 
+def save_filtered_data(cutoff=0.1, order=4):
+    """
+    Lưu dữ liệu sau khi áp dụng lowpass filter vào folder 'processed'
+    
+    Cấu trúc folder:
+    processed/
+        chi/
+            2.csv
+            4.csv
+            ...
+        huy/
+            2.csv
+            ...
+        ...
+    
+    cutoff: tần số cắt normalization (0-1)
+    order: độ của filter
+    """
+    logger.info(f"Bắt đầu lưu dữ liệu filtered (cutoff={cutoff}, order={order})...")
+    
+    try:
+        # Tạo folder processed
+        base_dir = get_data_path.__globals__['BASE_DIR']
+        processed_dir = base_dir / "processed"
+        processed_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Thiết kế lowpass filter
+        b, a = butter(order, cutoff, btype='low')
+        
+        # Duyệt qua từng người
+        for person in PEOPLE:
+            # Tạo folder cho mỗi người
+            person_dir = processed_dir / person
+            person_dir.mkdir(parents=True, exist_ok=True)
+            logger.info(f"\n📁 Xử lý người: {person}")
+            
+            # Duyệt qua từng file
+            for file_num in DATA_FILES:
+                path = get_data_path(person, file_num)
+                df = pd.read_csv(path)
+                
+                # Lấy tất cả dữ liệu (tất cả samples)
+                data = df.values.astype(float)
+                
+                # Áp dụng lowpass filter cho mỗi sample (mỗi hàng)
+                filtered_data = np.zeros_like(data)
+                for i in range(data.shape[0]):
+                    filtered_data[i] = filtfilt(b, a, data[i])
+                
+                # Lưu vào CSV
+                filtered_df = pd.DataFrame(filtered_data)
+                output_path = person_dir / f"{file_num}.csv"
+                filtered_df.to_csv(output_path, index=False)
+                
+                logger.info(f"  ✓ Lưu: {output_path} (shape: {filtered_data.shape})")
+        
+        logger.info(f"\n✓ Hoàn thành lưu dữ liệu filtered tại: {processed_dir}")
+        print(f"\n{'='*70}")
+        print(f"✅ Dữ liệu sau lowpass filter đã lưu tại: {processed_dir}")
+        print(f"{'='*70}\n")
+        
+    except Exception as e:
+        logger.error(f"✗ Lỗi khi lưu dữ liệu: {e}")
+        import traceback
+        traceback.print_exc()
+
+def ve_du_lieu_processed():
+    """
+    Vẽ dữ liệu đã filter từ folder 'processed'
+    2 cột, 5 hàng (mỗi cột 5 người), mỗi file 1 màu (processed data)
+    """
+    logger.info("Bắt đầu vẽ dữ liệu từ folder processed...")
+    
+    try:
+        base_dir = get_data_path.__globals__['BASE_DIR']
+        processed_dir = base_dir / "processed"
+        
+        # Kiểm tra folder processed có tồn tại không
+        if not processed_dir.exists():
+            logger.error(f"✗ Folder 'processed' không tồn tại: {processed_dir}")
+            return
+        
+        n_people = len(PEOPLE)
+        fig, axes = plt.subplots(5, 2, figsize=(16, 14), sharex=True)
+        
+        # Màu sắc bình thường
+        colors = plt.cm.tab10.colors
+        
+        # 🎨 Thiết lập style đẹp
+        plt.style.use('seaborn-v0_8-darkgrid')
+        fig.patch.set_facecolor('white')
+        
+        for i, person in enumerate(PEOPLE):
+            row = i // 2
+            col = i % 2
+            ax = axes[row, col]
+            ax.set_facecolor('#F8F9FA')
+            
+            for j, file_num in enumerate(DATA_FILES):
+                path = processed_dir / person / f"{file_num}.csv"
+                
+                if not path.exists():
+                    logger.warning(f"  ⚠️ Không tìm thấy: {path}")
+                    continue
+                
+                df = pd.read_csv(path)
+                
+                # 🔥 lấy 1 sample (processed)
+                sample = df.iloc[0].values.astype(float)
+                
+                ax.plot(sample, color=colors[j], 
+                       label=f'Thickness {file_num}', linewidth=2.5, alpha=0.8)
+            
+            ax.set_title(f' {person.upper()}', fontsize=12, fontweight='bold', pad=10)
+            ax.grid(alpha=0.25, linestyle='--', linewidth=0.5)
+            ax.set_axisbelow(True)
+            
+            # Cài đặt label cho trục
+            ax.set_ylabel("Value", fontsize=10, fontweight='bold')
+        
+        # Cài đặt xlabel cho hàng cuối
+        axes[4, 0].set_xlabel("Feature Index", fontsize=11, fontweight='bold')
+        axes[4, 1].set_xlabel("Feature Index", fontsize=11, fontweight='bold')
+        
+        # Legend chung ở dưới cùng
+        handles, labels = axes[0, 0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.02),
+                  ncol=5, fontsize=10, framealpha=0.95, edgecolor='gray', fancybox=True)
+        
+        # Tiêu đề tổng quát
+        plt.suptitle("Processed Data (Lowpass Filtered) - Sample 0 from Each File", 
+                    fontsize=16, fontweight='bold', y=0.995)
+        
+        plt.tight_layout()
+        
+        output_path = get_data_path.__globals__['PLOT_DIR'] / 'compare_processed_data.png'
+        plt.savefig(output_path, dpi=150, bbox_inches='tight')
+        
+        plt.show()
+        logger.info(f"✓ Đã lưu hình ảnh: {output_path}")
+        
+    except Exception as e:
+        logger.error(f"Lỗi khi vẽ: {e}")
+        import traceback
+        traceback.print_exc()
+
 def lay_du_lieu() -> dict:
     """
     Lấy dữ liệu từ tất cả file CSV
