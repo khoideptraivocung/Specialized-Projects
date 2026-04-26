@@ -1,0 +1,64 @@
+# ============ Python ============
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ============ Virtual Environment ============
+venv/
+ENV/
+env/
+.venv
+
+# ============ IDE & Editor ============
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ============ Dữ liệu & Output ============
+*.csv
+output_visualization.png
+*.png
+*.jpg
+*.jpeg
+
+# ============ Model & Processed Data ============
+*.keras
+processed/model.keras
+result/
+
+# ============ Tệp tạm ============
+.ipynb_checkpoints/
+*.ipynb
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ============ Environment Variables ============
+.env
+.env.local
+config.local.py

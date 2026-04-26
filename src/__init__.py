@@ -9,12 +9,14 @@ from pathlib import Path
 BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / "data"
 PLOT_DIR = BASE_DIR/"data_plotting"
+PROCESS_DIR = BASE_DIR / "processed"
+RESULT_DIR = BASE_DIR / "result"
 # ============ Danh sách người phụ trách ============
 PEOPLE = ["chi", "huy", "khanh", "khoi", "ninh", "phhuy","1", "2", "3","4"]
 
 # ============ Danh sách file dữ liệu ============
 DATA_FILES = [2, 4, 6, 8, 10]
-
+PROCESS_FILES = [2,4,6,8,10]
 # ============ Cấu hình pandas ============
 import pandas as pd
 pd.set_option('display.max_columns', None)
@@ -47,4 +49,4 @@ def validate_data_exists() -> bool:
     logger.info("✓ Tất cả file dữ liệu đều tồn tại")
     return True
 
-__all__ = ['BASE_DIR', 'DATA_DIR', 'PEOPLE', 'DATA_FILES', 'logger', 'get_data_path', 'validate_data_exists']
+__all__ = ['BASE_DIR', 'DATA_DIR','PROCESS_DIR' 'PEOPLE', 'DATA_FILES', 'logger', 'get_data_path', 'validate_data_exists']

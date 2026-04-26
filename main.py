@@ -10,7 +10,7 @@ def main():
     
     
     # Vẽ dữ liệu đã lưu
-    ve_du_lieu_processed()
+    
 
 if __name__ == "__main__":
     main()
