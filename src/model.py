@@ -80,13 +80,13 @@ def build_cnn_model(input_shape: tuple = (333, 1)) -> Sequential:
     model.compile(
         optimizer='adam',
         loss='mse',
-        metrics=['mae']
+        metrics=['mape']
     )
     
     logger.info("\n✓ Model compiled:")
     logger.info(f"  Optimizer: adam")
     logger.info(f"  Loss: mse")
-    logger.info(f"  Metrics: mae")
+    logger.info(f"  Metrics: mape")
     logger.info("=" * 70 + "\n")
     
     return model

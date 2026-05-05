@@ -11,6 +11,8 @@ DATA_DIR = BASE_DIR / "data"
 PLOT_DIR = BASE_DIR/"data_plotting"
 PROCESS_DIR = BASE_DIR / "processed"
 RESULT_DIR = BASE_DIR / "result"
+MODEL_DIR = BASE_DIR /"models"
+RESULT2_DIR = BASE_DIR /"result2"
 # ============ Danh sách người phụ trách ============
 PEOPLE = ["chi", "huy", "khanh", "khoi", "ninh", "phhuy","1", "2", "3","4"]
 

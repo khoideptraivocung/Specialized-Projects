@@ -334,7 +334,7 @@ def train_full_pipeline(noise_level: float = 0.05,
     logger.info("\n[1/8] LOADING DATA\n")
     data = load_and_preprocess(noise_level=noise_level)
     X = data['X_scaled']
-    y = data['y_scaled']
+    y = data['y']
     
     # Step 2: Reshape
     logger.info("\n[2/8] RESHAPING DATA\n")

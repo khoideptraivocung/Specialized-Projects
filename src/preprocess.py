@@ -73,20 +73,19 @@ def gop_du_lieu_va_kiem_tra():
         return None
 
 
-def tao_y_voi_noise(X: np.ndarray, noise_level: float = 0.05) -> np.ndarray:
+def tao_y(X: np.ndarray) -> np.ndarray:
     """
-    Tạo y từ file number (2, 4, 6, 8, 10) với noise nhẹ
+    Tạo y từ file number (2, 4, 6, 8, 10) - ground truth nguyên bản
     Đọc từ PROCESSED DATA
     
     Args:
         X: Dữ liệu đã merge, shape (n_samples, n_features)
-        noise_level: Mức độ noise (%)
     
     Returns:
         y: Array label cho mỗi sample
     """
     logger.info("=" * 60)
-    logger.info("TẠO Y VỚI NOISE NHẸ (từ PROCESSED)")
+    logger.info("TẠO Y GỐC (GROUND TRUTH) TỪ PROCESSED DATA")
     logger.info("=" * 60)
     
     y = []
@@ -108,79 +107,63 @@ def tao_y_voi_noise(X: np.ndarray, noise_level: float = 0.05) -> np.ndarray:
     
     y = np.array(y, dtype=np.float32)
     
-    logger.info(f"\n   → Shape y trước noise: {y.shape}")
-    
-    # Thêm noise nhẹ
-    noise = np.random.normal(0, noise_level * np.mean(y), y.shape)
-    y_with_noise = y + noise
-    
-    logger.info(f"   ✓ Thêm noise với mức độ: {noise_level*100:.1f}%")
-    logger.info(f"   → Shape y sau noise: {y_with_noise.shape}")
-    logger.info(f"   → Y min: {y_with_noise.min():.4f}, max: {y_with_noise.max():.4f}")
-    logger.info(f"   → Y mean: {y_with_noise.mean():.4f}, std: {y_with_noise.std():.4f}")
+    logger.info(f"\n   → Shape y: {y.shape}")
+    logger.info(f"   → Y min: {y.min():.4f}, max: {y.max():.4f}")
+    logger.info(f"   → Y mean: {y.mean():.4f}, std: {y.std():.4f}")
     
     logger.info("\n" + "=" * 60)
-    logger.info("✓ HOÀN THÀNH TẠO Y")
+    logger.info("✓ HOÀN THÀNH TẠO Y GỐC")
     logger.info("=" * 60)
     
-    return y_with_noise
+    return y
 
 
-def scale_data(X: np.ndarray, y: np.ndarray) -> tuple:
+def scale_data(X: np.ndarray) -> tuple:
     """
-    Áp dụng StandardScaler cho X và y
+    Áp dụng StandardScaler cho X (không scale y)
     
     Args:
         X: Features, shape (n_samples, n_features)
-        y: Labels, shape (n_samples,)
     
     Returns:
-        X_scaled, y_scaled, scaler_X, scaler_y
+        X_scaled, scaler_X
     """
     logger.info("=" * 60)
-    logger.info("STANDARDSCALER XỬ LÝ")
+    logger.info("STANDARDSCALER XỬ LÝ (CHỈ CÓ X)")
     logger.info("=" * 60)
     
-    # Reshape y cho scaler (mong đợi 2D array)
-    y_reshaped = y.reshape(-1, 1)
-    
-    # Tạo scalers
+    X = X[:, :333]
     scaler_X = StandardScaler()
-    scaler_y = StandardScaler()
     
-    # Fit và transform
     logger.info(f"\n📊 TRƯỚC SCALING:")
     logger.info(f"   X - shape: {X.shape}, mean: {X.mean():.4f}, std: {X.std():.4f}")
-    logger.info(f"   y - mean: {y.mean():.4f}, std: {y.std():.4f}")
     
     X_scaled = scaler_X.fit_transform(X)
-    y_scaled = scaler_y.fit_transform(y_reshaped).ravel()
     
     logger.info(f"\n📊 SAU SCALING:")
     logger.info(f"   X - shape: {X_scaled.shape}, mean: {X_scaled.mean():.4f}, std: {X_scaled.std():.4f}")
-    logger.info(f"   y - mean: {y_scaled.mean():.4f}, std: {y_scaled.std():.4f}")
     
     logger.info("\n" + "=" * 60)
     logger.info("✓ HOÀN THÀNH STANDARDSCALER")
     logger.info("=" * 60)
     
-    return X_scaled, y_scaled, scaler_X, scaler_y
+    return X_scaled, scaler_X
 
 
-def load_and_preprocess(noise_level: float = 0.05) -> dict:
+def load_and_preprocess(noise_level: float = 0.0) -> dict:
     """
-    Pipeline hoàn chỉnh: Load → Tạo y → StandardScaler
+    Pipeline hoàn chỉnh: Load → Tạo y gốc → StandardScaler (chỉ X)
     
     Args:
-        noise_level: Mức độ noise cho y
+        noise_level: Không sử dụng; y vẫn là ground truth nguyên bản
     
     Returns:
-        dict với keys: X, y, X_scaled, y_scaled, scaler_X, scaler_y
+        dict với keys: X_scaled, y, scaler_X
     """
     logger.info("\n\n")
     logger.info("╔" + "=" * 58 + "╗")
     logger.info("║" + " " * 58 + "║")
-    logger.info("║" + "  PIPELINE: LOAD → TẠO Y → STANDARDSCALER".center(58) + "║")
+    logger.info("║" + "  PIPELINE: LOAD → TẠO Y GỐC → STANDARDSCALER X".center(58) + "║")
     logger.info("║" + " " * 58 + "║")
     logger.info("╚" + "=" * 58 + "╝")
     
@@ -190,38 +173,34 @@ def load_and_preprocess(noise_level: float = 0.05) -> dict:
         logger.error("✗ Không thể load dữ liệu")
         return None
     
-    # Bước 2: Tạo y với noise
-    y = tao_y_voi_noise(X, noise_level=noise_level)
+    # Bước 2: Tạo y gốc (ground truth) - không noise
+    y = tao_y(X)
     if y is None:
         logger.error("✗ Không thể tạo y")
         return None
     
-    # Bước 3: Áp dụng StandardScaler
-    X_scaled, y_scaled, scaler_X, scaler_y = scale_data(X, y)
+    # Bước 3: Áp dụng StandardScaler (chỉ cho X)
+    X_scaled, scaler_X = scale_data(X)
     
     logger.info("\n" + "=" * 60)
     logger.info("TỔNG HỢP DỮ LIỆU CUỐI CÙNG")
     logger.info("=" * 60)
-    logger.info(f"Original X shape: {X.shape}")
-    logger.info(f"Scaled X shape: {X_scaled.shape}")
+    logger.info(f"X shape: {X.shape}")
+    logger.info(f"X_scaled shape: {X_scaled.shape}")
     logger.info(f"y shape: {y.shape}")
-    logger.info(f"y_scaled shape: {y_scaled.shape}")
     logger.info("=" * 60 + "\n")
     
     return {
-        'X': X.astype(np.float32),
-        'y': y.astype(np.float32),
         'X_scaled': X_scaled.astype(np.float32),
-        'y_scaled': y_scaled.astype(np.float32),
-        'scaler_X': scaler_X,
-        'scaler_y': scaler_y
+        'y': y.astype(np.float32),
+        'scaler_X': scaler_X
     }
 
 if __name__ == "__main__":
     # Chạy pipeline hoàn chỉnh
-    result = load_and_preprocess(noise_level=0.05)
+    result = load_and_preprocess()
     
     if result:
         logger.info("\n✅ Pipeline hoàn tất thành công!")
         logger.info(f"   X_scaled: {result['X_scaled'].shape}")
-        logger.info(f"   y_scaled: {result['y_scaled'].shape}")
+        logger.info(f"   y: {result['y'].shape}")
